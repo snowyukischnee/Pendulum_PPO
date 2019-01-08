@@ -13,7 +13,7 @@ VALUE_COEF = 4e-1
 DISTRIBUTION_COEF = 1e-3
 ACTOR_LR = 1e-4
 CRITIC_LR = 2e-4
-TOTAL_TRAINING_EPISODES = 1000
+TOTAL_TRAINING_EPISODES = 200
 MAX_STEPS = 200
 MEMORY_SIZE = 32
 BATCH_SIZE = 32
@@ -77,9 +77,10 @@ class ActorCritic(object):
                 self.action_prediction = tf.squeeze(self.a_normdist.sample(1), axis=0)
                 self.action_play = tf.squeeze(self.a_mean, axis=0)
             with tf.variable_scope('loss'):
-                a_ratio = self.a_normdist.prob(self.action) / self.a_old_normdist.prob(self.action)
+                a_ratio = self.a_normdist.log_prob(self.action) - self.a_old_normdist.log_prob(self.action)
+                a_ratio = tf.exp(a_ratio)
                 self.a_loss = tf.minimum(a_ratio * self.advantage, tf.clip_by_value(a_ratio, 1.0-EPSILON, 1.0+EPSILON) * self.advantage)
-                self.a_loss -= VALUE_COEF * self.c_loss
+                # self.a_loss -= VALUE_COEF * self.c_loss
                 self.a_loss += DISTRIBUTION_COEF * self.a_normdist.entropy()
                 self.a_loss = -tf.reduce_mean(self.a_loss)
                 self.a_optimizer = tf.train.AdamOptimizer(self.actor_leanring_rate).minimize(self.a_loss)
@@ -113,6 +114,8 @@ class ActorCritic(object):
                     inputs=l1,
                     units=self.action_size,
                     activation=tf.nn.softplus,
+                    kernel_initializer=tf.initializers.random_uniform(0.1, 1),
+                    bias_initializer=tf.constant_initializer(0.1),
                     name='variance',
                     trainable=trainable,
                 )
@@ -195,7 +198,7 @@ if __name__ == '__main__':
     memory = Memory(MEMORY_SIZE)
     saver = tf.train.Saver()
     writer = tf.summary.FileWriter('./log/', sess.graph)
-    pretrained = True
+    pretrained = False
     training = False
     if sys.argv[1] == 'play':
         training = False
@@ -237,30 +240,34 @@ if __name__ == '__main__':
         rewards = []
         update_t = 0
         total_reward = 0
-        for episode in range(1, TOTAL_TRAINING_EPISODES + 1):
-            t = 0
-            state = env.reset()
-            total_reward = 0
-            while True:
-                t += 1
-                update_t += 1
-                action = ac.predict(state)
-                next_state, reward, done, _ = env.step(action)
-                total_reward += reward
-                reward = (reward + 8) / 10
-                memory.add((state, action, next_state, reward))
-                if done or t > MAX_STEPS or update_t > UPDATE_INTERVAL:
-                    update_t = 0
-                    ac.learn(memory.sample(BATCH_SIZE, continuous=True))
-                if done or t > MAX_STEPS:
-                    memory.clear()
-                    print('episode: {} '.format(episode), 'reward: {} '.format(total_reward))
-                    rewards.append(total_reward)
-                    break
-                state = next_state
-            if episode % 5 == 0:
-                save_path = saver.save(sess, './models/model.ckpt')
-                print('model Saved at {}'.format(save_path))
-        print('Mean reward: {}'.format(np.mean(rewards)))
-        plt.plot(np.squeeze(rewards))
-        plt.show()
+        try:
+            for episode in range(1, TOTAL_TRAINING_EPISODES + 1):
+                t = 0
+                state = env.reset()
+                total_reward = 0
+                while True:
+                    t += 1
+                    update_t += 1
+                    action = ac.predict(state)
+                    next_state, reward, done, _ = env.step(action)
+                    total_reward += reward
+                    reward = (reward + 8) / 10
+                    memory.add((state, action, next_state, reward))
+                    if done or t > MAX_STEPS or update_t > UPDATE_INTERVAL:
+                        update_t = 0
+                        ac.learn(memory.sample(BATCH_SIZE, continuous=True))
+                    if done or t > MAX_STEPS:
+                        memory.clear()
+                        print('episode: {} '.format(episode), 'reward: {} '.format(total_reward))
+                        rewards.append(total_reward)
+                        break
+                    state = next_state
+                if episode % 5 == 0:
+                    save_path = saver.save(sess, './models/model.ckpt')
+                    print('model Saved at {}'.format(save_path))
+        except:
+            pass
+        finally:
+            print('Mean reward: {}'.format(np.mean(rewards)))
+            plt.plot(np.squeeze(rewards))
+            plt.show()
