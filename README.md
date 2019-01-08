@@ -8,7 +8,7 @@ Run this command to use the pretrained model to play the game
 ```
 Or run this command to train the model
 ```
->python pendulum.py
+>python pendulum.py anything-(not-play)
 ```
 ## Notes
 The model in `pendulum.py` was able to solved `Pendulum-v0` after 120 episodes
