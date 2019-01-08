@@ -11,8 +11,9 @@ Or run this command to train the model
 >python pendulum.py anything-(not-play)
 ```
 ## Notes
-The model in `pendulum.py` was able to solved `Pendulum-v0` after 120 episodes
+The model in `pendulum.py` was able to solved `Pendulum-v0` after about 110 episodes
 ![Train Result](result.png)
+<br/>
 You're free to edit the model hyperparameters and some constansts to make it better
 ## Contributions
 Special thanks to [Morvan Zhou](https://github.com/MorvanZhou) for the explanation of the PPO 
