@@ -12,7 +12,7 @@ Or run this command to train the model
 ```
 ## Notes
 The model in `pendulum.py` was able to solved `Pendulum-v0` after 120 episodes
-
+![Train Result](result.png)
 You're free to edit the model hyperparameters and some constansts to make it better
 ## Contributions
 Special thanks to [Morvan Zhou](https://github.com/MorvanZhou) for the explanation of the PPO 
