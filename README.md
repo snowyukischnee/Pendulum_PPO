@@ -12,6 +12,8 @@ Or run this command to train the model
 ```
 ## Notes
 The model in `pendulum.py` was able to solved `Pendulum-v0` after about 110 episodes
+
+Total rewards in 140 steps of traing:
 ![Total rewards in 140 steps of traing](result.png)
 <br/>
 You're free to edit the model hyperparameters and some constansts to make it better
